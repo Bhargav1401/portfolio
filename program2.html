@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 11 — Fetch API | Git-First Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#050505;color:#fff;overflow:hidden;height:100vh}
+        ::-webkit-scrollbar{width:0}
+        canvas#pc{position:fixed;inset:0;z-index:0;pointer-events:none}
+        .gp{background:rgba(255,255,255,0.03);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
+        .gs{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1)}
+        .slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateX(60px);transition:all .6s cubic-bezier(.16,1,.3,1);pointer-events:none;z-index:1;padding:80px 24px 80px}
+        .slide.active{opacity:1;transform:translateX(0);pointer-events:auto;z-index:2}
+        .slide.exit-left{opacity:0;transform:translateX(-60px)}
+        .cb{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:20px 24px;font-family:'SF Mono','Fira Code','Cascadia Code',Consolas,monospace;font-size:13px;line-height:1.7;overflow-x:auto;color:#d4d4d4}
+        .cb .kw{color:#c084fc}.cb .fn{color:#60a5fa}.cb .str{color:#34d399}.cb .cm{color:#525252;font-style:italic}.cb .num{color:#f87171}.cb .op{color:#fbbf24}.cb .tag{color:#f472b6}.cb .attr{color:#fbbf24}.cb .val{color:#34d399}.cb .obj{color:#fbbf24}
+        .term{background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.06);border-radius:12px;overflow:hidden}
+        .term-bar{display:flex;align-items:center;gap:6px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+        .term-dot{width:10px;height:10px;border-radius:50%}
+        .term-body{padding:16px 20px;font-family:'SF Mono','Fira Code',monospace;font-size:12px;line-height:1.8;color:#a3a3a3}
+        .di{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:all .3s;width:100%}
+        .di:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+        .di::placeholder{color:#525252}
+        .db{background:#fff;color:#000;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all .3s}
+        .db:hover{background:#d4d4d4}.db:disabled{opacity:.5;cursor:not-allowed}
+        .sp{position:fixed;top:0;left:0;right:0;height:3px;z-index:100;background:rgba(255,255,255,.04)}
+        .sp-f{height:100%;background:linear-gradient(90deg,#3B82F6,#60a5fa);transition:width .5s cubic-bezier(.16,1,.3,1);box-shadow:0 0 10px rgba(59,130,246,.4)}
+        .sn{position:fixed;bottom:0;left:0;right:0;z-index:100;padding:16px 24px;background:rgba(5,5,5,.85);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.06)}
+        .tb{position:fixed;top:0;left:0;right:0;z-index:99;padding:16px 24px;background:rgba(5,5,5,.6);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.04)}
+        .glow{position:absolute;width:500px;height:500px;border-radius:50%;filter:blur(120px);pointer-events:none}
+        .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:500;font-family:'SF Mono','Fira Code',monospace}
+        .tg{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);color:#22C55E}
+        .tr{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);color:#EF4444}
+        .tp{background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.15);color:#A855F7}
+        .ty{background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.15);color:#EAB308}
+        .tbl{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.15);color:#3B82F6}
+        .to{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.15);color:#F97316}
+        .bl{display:flex;align-items:flex-start;gap:12px;padding:6px 0}
+        .bd{width:6px;height:6px;border-radius:50%;background:#3B82F6;margin-top:7px;flex-shrink:0}
+        .bd.g{background:#22C55E}.bd.r{background:#EF4444}.bd.p{background:#A855F7}.bd.y{background:#EAB308}.bd.o{background:#F97316}
+        .kbd{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-family:'SF Mono','Fira Code',monospace;font-size:11px;color:#a3a3a3}
+        .rt{table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#525252;border-bottom:1px solid rgba(255,255,255,.06)}td{padding:8px 12px;font-size:12px;color:#a3a3a3;border-bottom:1px solid rgba(255,255,255,.03)}tr:hover td{background:rgba(255,255,255,.01)}}
+        .sw{position:absolute;bottom:90px;right:32px;font-size:120px;font-weight:700;color:rgba(255,255,255,.02);line-height:1;pointer-events:none;font-variant-numeric:tabular-nums}
+        @keyframes fiu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .slide.active .a1{animation:fiu .5s .1s ease-out both}
+        .slide.active .a2{animation:fiu .5s .2s ease-out both}
+        .slide.active .a3{animation:fiu .5s .35s ease-out both}
+        .slide.active .a4{animation:fiu .5s .5s ease-out both}
+        .slide.active .a5{animation:fiu .5s .65s ease-out both}
+        @keyframes ab{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.1);border-top-color:#3B82F6;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+        .user-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 16px;transition:all .3s}
+        .user-card:hover{border-color:rgba(59,130,246,.2);background:rgba(255,255,255,.05)}
+        .method-badge{padding:4px 12px;border-radius:6px;font-family:'SF Mono','Fira Code',monospace;font-size:12px;font-weight:600}
+        .flow-arrow{display:flex;align-items:center;justify-content:center;color:#525252;font-size:18px}
+    </style>
+</head>
+<body>
+<canvas id="pc"></canvas>
+<div class="sp"><div class="sp-f" id="pf" style="width:3.33%"></div></div>
+<div class="tb flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center"><i data-lucide="git-branch" class="w-3.5 h-3.5 text-white"></i></div>
+        <span class="text-xs font-medium tracking-tight hidden sm:inline">Git-First Bootcamp</span>
+        <span class="text-neutral-600 text-xs hidden sm:inline">/</span>
+        <span class="text-xs text-neutral-400 hidden sm:inline">Day 11</span>
+    </div>
+    <div class="flex items-center gap-4">
+        <span class="text-xs text-neutral-500 font-mono" id="sc">01 / 30</span>
+        <div class="tag tg"><i data-lucide="git-commit" class="w-3 h-3"></i> API Integration</div>
+    </div>
+</div>
+
+<div id="sc2" style="position:relative;width:100%;height:100vh">
+
+<!-- 1 -->
+<div class="slide active" data-s="1">
+    <div class="glow" style="top:-200px;right:-200px;background:rgba(59,130,246,.06)"></div>
+    <div class="sw">01</div>
+    <div class="max-w-3xl mx-auto text-center relative z-10">
+        <div class="a1 inline-flex items-center gap-2 px-3 py-1.5 rounded-full gp text-[10px] font-medium uppercase tracking-wider text-neutral-400 mb-8"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>Day 11 of 20</div>
+        <h1 class="a2 text-5xl md:text-7xl font-medium tracking-tight leading-[.9] mb-6">Fetch API<br><span class="text-neutral-500">& Async/Await</span></h1>
+        <p class="a3 text-lg text-neutral-400 font-light leading-relaxed max-w-lg mx-auto mb-10">Connect your app to the real world. Fetch data from servers, handle responses, and render live content.</p>
+        <div class="a4 flex flex-wrap items-center justify-center gap-3">
+            <span class="tag tp">Async / Await</span>
+            <span class="tag tbl">External Data</span>
+            <span class="tag tg">Live Rendering</span>
+        </div>
+        <div class="a5 mt-12 text-neutral-600 text-xs flex items-center justify-center gap-2">Press <span class="kbd">→</span> to begin <span style="animation:ab 1.5s infinite">→</span></div>
+    </div>
+</div>
+
+<!-- 2 -->
+<div class="slide" data-s="2">
+    <div class="sw">02</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <div class="a1 tag tr mb-6"><i data-lucide="alert-triangle" class="w-3 h-3"></i> The Problem</div>
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Static pages are dead ends.</h2>
+        <div class="a2 space-y-4 mb-10">
+            <div class="bl"><div class="bd r"></div><span class="text-neutral-300">Hardcoded data = every change needs a code deploy</span></div>
+            <div class="bl"><div class="bd r"></div><span class="text-neutral-300">No user accounts, no real-time info, no interactivity</span></div>
+            <div class="bl"><div class="bd r"></div><span class="text-neutral-300">Every real app talks to a server (Twitter, GitHub, Netflix)</span></div>
+            <div class="bl"><div class="bd r"></div><span class="text-neutral-300">You need to request data and handle the response</span></div>
+        </div>
+        <div class="a3 gp rounded-xl p-5">
+            <div class="text-xs text-neutral-500 mb-2">Today's Commit</div>
+            <div class="font-mono text-sm text-green-400 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i>"API Integration"</div>
+        </div>
+    </div>
+</div>
+
+<!-- 3 -->
+<div class="slide" data-s="3">
+    <div class="sw">03</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">What is an API?</h2>
+        <div class="a2 gp rounded-xl p-6 mb-6">
+            <div class="text-lg font-medium mb-3 text-center">Application Programming <span class="text-blue-400">Interface</span></div>
+            <div class="text-sm text-neutral-400 text-center font-light">A contract between your frontend and a server: <span class="text-white">"Send me X, I'll give you Y."</span></div>
+        </div>
+        <div class="a3 grid md:grid-cols-3 gap-4 mb-6">
+            <div class="gp rounded-xl p-5 text-center">
+                <i data-lucide="send" class="w-6 h-6 text-blue-400 mx-auto mb-3"></i>
+                <div class="text-sm font-medium mb-1">You Request</div>
+                <div class="text-xs text-neutral-500">"Give me users"</div>
+            </div>
+            <div class="gp rounded-xl p-5 text-center">
+                <i data-lucide="server" class="w-6 h-6 text-purple-400 mx-auto mb-3"></i>
+                <div class="text-sm font-medium mb-1">Server Processes</div>
+                <div class="text-xs text-neutral-500">Database lookup</div>
+            </div>
+            <div class="gp rounded-xl p-5 text-center">
+                <i data-lucide="download" class="w-6 h-6 text-green-400 mx-auto mb-3"></i>
+                <div class="text-sm font-medium mb-1">You Receive</div>
+                <div class="text-xs text-neutral-500">JSON data back</div>
+            </div>
+        </div>
+        <div class="a4 text-center text-xs text-neutral-500">Think of it as a <span class="text-white">menu at a restaurant</span> — you order, kitchen makes it, you get food.</div>
+    </div>
+</div>
+
+<!-- 4 -->
+<div class="slide" data-s="4">
+    <div class="sw">04</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">The Request-Response Model</h2>
+        <div class="a2 gp rounded-xl p-6 mb-6">
+            <div class="flex items-center gap-4 flex-wrap justify-center">
+                <div class="gp rounded-lg p-4 text-center min-w-[120px]">
+                    <div class="text-xs text-neutral-500 mb-1">CLIENT</div>
+                    <div class="text-sm font-medium">Your Browser</div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <div class="text-[10px] text-blue-400 font-mono">GET /users</div>
+                    <div class="text-neutral-600">→→→</div>
+                    <div class="text-neutral-600">←←←</div>
+                    <div class="text-[10px] text-green-400 font-mono">JSON []</div>
+                </div>
+                <div class="gp rounded-lg p-4 text-center min-w-[120px]">
+                    <div class="text-xs text-neutral-500 mb-1">SERVER</div>
+                    <div class="text-sm font-medium">API Endpoint</div>
+                </div>
+            </div>
+        </div>
+        <div class="a3 space-y-3">
+            <div class="bl"><div class="bd"></div><span class="text-neutral-300"><span class="text-white font-medium">URL</span> — where to send the request</span></div>
+            <div class="bl"><div class="bd"></div><span class="text-neutral-300"><span class="text-white font-medium">Method</span> — GET (read), POST (create), PUT (update), DELETE</span></div>
+            <div class="bl"><div class="bd"></div><span class="text-neutral-300"><span class="text-white font-medium">Headers</span> — metadata (content type, auth tokens)</span></div>
+            <div class="bl"><div class="bd"></div><span class="text-neutral-300"><span class="text-white font-medium">Body</span> — data you're sending (for POST/PUT)</span></div>
+            <div class="bl"><div class="bd g"></div><span class="text-neutral-300"><span class="text-white font-medium">Response</span> — status code + data (usually JSON)</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- 5 -->
+<div class="slide" data-s="5">
+    <div class="sw">05</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <div class="a1 tag tbl mb-6"><i data-lucide="zap" class="w-3 h-3"></i> Enter Fetch API</div>
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-4">The Fetch API</h2>
+        <p class="a2 text-neutral-400 font-light mb-8 max-w-lg">Built into every modern browser. No libraries needed. Makes HTTP requests from JavaScript.</p>
+        <div class="a3 cb mb-6">
+            <span class="cm">// The most basic fetch call</span><br>
+            <span class="fn">fetch</span>(<span class="str">'https://api.example.com/users'</span>)
+        </div>
+        <div class="a4 space-y-3">
+            <div class="gp rounded-xl p-4 flex items-start gap-3">
+                <i data-lucide="check" class="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5"></i>
+                <div><span class="text-sm font-medium">Built-in</span><div class="text-xs text-neutral-500">No npm install, no CDN, always available</div></div>
+            </div>
+            <div class="gp rounded-xl p-4 flex items-start gap-3">
+                <i data-lucide="check" class="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5"></i>
+                <div><span class="text-sm font-medium">Promise-based</span><div class="text-xs text-neutral-500">Works perfectly with async/await</div></div>
+            </div>
+            <div class="gp rounded-xl p-4 flex items-start gap-3">
+                <i data-lucide="check" class="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5"></i>
+                <div><span class="text-sm font-medium">Replaced XMLHttpRequest</span><div class="text-xs text-neutral-500">The old way was ugly. Fetch is clean.</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 6 -->
+<div class="slide" data-s="6">
+    <div class="sw">06</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">fetch() Syntax</h2>
+        <div class="a2 cb mb-6">
+            <span class="cm">// Full syntax</span><br>
+            <span class="fn">fetch</span>(<span class="str">url</span>, { <span class="obj">options</span> })<br><br>
+            <span class="cm">// With options</span><br>
+            <span class="fn">fetch</span>(<span class="str">'https://api.example.com/users'</span>, {<br>
+            &nbsp;&nbsp;<span class="attr">method</span>: <span class="str">'GET'</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// HTTP method</span><br>
+            &nbsp;&nbsp;<span class="attr">headers</span>: {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// Request headers</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'Content-Type'</span>: <span class="str">'application/json'</span><br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;<span class="attr">body</span>: <span class="fn">JSON.stringify</span>({...}) <span class="cm">// Request body</span><br>
+            })
+        </div>
+        <div class="a3 grid grid-cols-2 gap-3">
+            <div class="gp rounded-lg p-3"><span class="text-xs text-neutral-500">method</span><div class="text-sm font-mono">GET | POST | PUT | DELETE</div></div>
+            <div class="gp rounded-lg p-3"><span class="text-xs text-neutral-500">headers</span><div class="text-sm font-mono">{ key: value }</div></div>
+            <div class="gp rounded-lg p-3"><span class="text-xs text-neutral-500">body</span><div class="text-sm font-mono">JSON string</div></div>
+            <div class="gp rounded-lg p-3"><span class="text-xs text-neutral-500">mode</span><div class="text-sm font-mono">cors | no-cors</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- 7 -->
+<div class="slide" data-s="7">
+    <div class="sw">07</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">The Response Object</h2>
+        <div class="a2 cb mb-6">
+            <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/users'</span>);<br><br>
+            <span class="cm">// Response properties:</span><br>
+            response.<span class="fn">ok</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// true if status 200-299</span><br>
+            response.<span class="fn">status</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 200, 404, 500, etc.</span><br>
+            response.<span class="fn">statusText</span>&nbsp;<span class="cm">// "OK", "Not Found", etc.</span><br>
+            response.<span class="fn">headers</span>&nbsp;&nbsp;&nbsp;<span class="cm">// ResponseHeaders object</span><br><br>
+            <span class="cm">// Body parsing methods (each returns a Promise!):</span><br>
+            response.<span class="fn">json</span>()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// → Parse as JSON</span><br>
+            response.<span class="fn">text</span>()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// → Parse as string</span><br>
+            response.<span class="fn">blob</span>()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// → Parse as Blob (files)</span>
+        </div>
+        <div class="a3 gp rounded-xl p-4 flex items-center gap-3">
+            <i data-lucide="zap" class="w-4 h-4 text-yellow-400 flex-shrink-0"></i>
+            <span class="text-xs text-neutral-400"><span class="text-yellow-400 font-medium">response.json()</span> returns a Promise — you must await it separately!</span>
+        </div>
+    </div>
+</div>
+
+<!-- 8 -->
+<div class="slide" data-s="8">
+    <div class="sw">08</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Parsing JSON</h2>
+        <div class="a2 cb mb-6">
+            <span class="cm">// Step 1: Fetch</span><br>
+            <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'https://jsonplaceholder.typicode.com/users'</span>);<br><br>
+            <span class="cm">// Step 2: Parse (DON'T FORGET THIS!)</span><br>
+            <span class="kw">const</span> users = <span class="kw">await</span> response.<span class="fn">json</span>();<br><br>
+            <span class="cm">// Step 3: Use the data</span><br>
+            console.<span class="fn">log</span>(users[<span class="num">0</span>].name); <span class="cm">// "Leanne Graham"</span><br>
+            console.<span class="fn">log</span>(users[<span class="num">0</span>].email); <span class="cm">// "Sincere@april.biz"</span>
+        </div>
+        <div class="a3 gp rounded-xl p-4 flex items-center gap-3 mb-4">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400 flex-shrink-0"></i>
+            <span class="text-xs text-neutral-400">Without <span class="text-white font-medium">.json()</span>, response is just a stream — not usable data!</span>
+        </div>
+        <div class="a4 gp rounded-xl p-4">
+            <div class="text-xs text-neutral-500 mb-2">What JSON looks like:</div>
+            <div class="font-mono text-xs text-neutral-300">[{<span class="str">"id"</span>: <span class="num">1</span>, <span class="str">"name"</span>: <span class="str">"Leanne"</span>, <span class="str">"email"</span>: <span class="str">"..."</span>}, ...]</div>
+        </div>
+    </div>
+</div>
+
+<!-- 9 -->
+<div class="slide" data-s="9">
+    <div class="sw">09</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">.then() Chaining</h2>
+        <div class="a2 cb mb-6">
+            <span class="cm">// The "old" way (still valid)</span><br>
+            <span class="fn">fetch</span>(<span class="str">'https://jsonplaceholder.typicode.com/users'</span>)<br>
+            &nbsp;&nbsp;.<span class="fn">then</span>(<span class="kw">function</span>(response) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> response.<span class="fn">json</span>();<br>
+            &nbsp;&nbsp;})<br>
+            &nbsp;&nbsp;.<span class="fn">then</span>(<span class="kw">function</span>(users) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(users);<br>
+            &nbsp;&nbsp;})<br>
+            &nbsp;&nbsp;.<span class="fn">catch</span>(<span class="kw">function</span>(error) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">error</span>(<span class="str">'Error:'</span>, error);<br>
+            &nbsp;&nbsp;});
+        </div>
+        <div class="a3 gp rounded-xl p-4 flex items-center gap-3">
+            <i data-lucide="info" class="w-4 h-4 text-blue-400 flex-shrink-0"></i>
+            <span class="text-xs text-neutral-400">Works fine, but gets <span class="text-white font-medium">nested and hard to read</span> with complex logic. Enter async/await →</span>
+        </div>
+    </div>
+</div>
+
+<!-- 10 -->
+<div class="slide" data-s="10">
+    <div class="sw">10</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">The Problem with .then()</h2>
+        <div class="a2 grid md:grid-cols-2 gap-6">
+            <div class="gp rounded-xl p-5">
+                <div class="text-xs text-red-400 font-medium mb-3"><i data-lucide="x-circle" class="w-3 h-3 inline"></i> Callback Hell</div>
+                <div class="cb text-xs" style="padding:14px 16px">
+                    <span class="fn">fetch</span>(<span class="str">'/users'</span>)<br>
+                    &nbsp;.<span class="fn">then</span>(r => r.<span class="fn">json</span>())<br>
+                    &nbsp;.<span class="fn">then</span>(users => {<br>
+                    &nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">`/posts/${users[0].id}`</span>)<br>
+                    &nbsp;&nbsp;&nbsp;.<span class="fn">then</span>(r => r.<span class="fn">json</span>())<br>
+                    &nbsp;&nbsp;&nbsp;.<span class="fn">then</span>(posts => {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">fetch</span>(<span class="str">`/comments/${posts[0].id}`</span>)<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">then</span>(...<span class="tr">∞</span>)
+                </div>
+            </div>
+            <div class="gp rounded-xl p-5 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="text-5xl mb-4">😱</div>
+                    <div class="text-sm text-neutral-400">Hard to read</div>
+                    <div class="text-sm text-neutral-400">Hard to debug</div>
+                    <div class="text-sm text-neutral-400">Hard to error-handle</div>
+                </div>
+            </div>
+        </div>
+        <div class="a3 mt-6 text-center text-sm text-neutral-500">There must be a better way... <span class="text-blue-400 font-medium">→</span></div>
+    </div>
+</div>
+
+<!-- 11 -->
+<div class="slide" data-s="11">
+    <div class="sw">11</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <div class="a1 tag tp mb-6"><i data-lucide="sparkles" class="w-3 h-3"></i> The Solution</div>
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-4">Async / Await</h2>
+        <p class="a2 text-neutral-400 font-light mb-8 max-w-lg">Syntactic sugar over Promises. Makes async code look synchronous.</p>
+        <div class="a3 cb mb-6">
+            <span class="cm">// Same logic, but readable!</span><br>
+            <span class="kw">async function</span> <span class="fn">getUsers</span>() {<br>
+            &nbsp;&nbsp;<span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/users'</span>);<br>
+            &nbsp;&nbsp;<span class="kw">const</span> users = <span class="kw">await</span> response.<span class="fn">json</span>();<br>
+            &nbsp;&nbsp;console.<span class="fn">log</span>(users);<br>
+            }
+        </div>
+        <div class="a4 space-y-3">
+            <div class="bl"><div class="bd p"></div><span class="text-neutral-300"><span class="text-white font-medium">async</span> keyword marks a function as asynchronous</span></div>
+            <div class="bl"><div class="bd p"></div><span class="text-neutral-300"><span class="text-white font-medium">await</span> pauses execution until the Promise resolves</span></div>
+            <div class="bl"><div class="bd g"></div><span class="text-neutral-300">Code reads <span class="text-white">top to bottom</span> — like normal code</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- 12 -->
+<div class="slide" data-s="12">
+    <div class="sw">12</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Async Function Rules</h2>
+        <div class="a2 space-y-4">
+            <div class="gp rounded-xl p-5">
+                <div class="text-sm font-medium mb-2 flex items-center gap-2"><span class="tag tp">Rule 1</span> async keyword</div>
+                <div class="cb text-xs" style="padding:12px 14px">
+                    <span class="cm">// Function declaration</span><br>
+                    <span class="kw">async function</span> <span class="fn">getData</span>() { ... }<br><br>
+                    <span class="cm">// Arrow function</span><br>
+                    <span class="kw">const</span> <span class="fn">getData</span> = <span class="kw">async</span> () => { ... };<br><br>
+                    <span class="cm">// ⚠️ await only works INSIDE async functions</span>
+                </div>
+            </div>
+            <div class="gp rounded-xl p-5">
+                <div class="text-sm font-medium mb-2 flex items-center gap-2"><span class="tag tbl">Rule 2</span> await keyword</div>
+                <div class="cb text-xs" style="padding:12px 14px">
+                    <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(url); <span class="cm">// pauses here</span><br>
+                    <span class="cm">// doesn't run next line until fetch completes</span><br>
+                    console.<span class="fn">log</span>(data); <span class="cm">// guaranteed to have data</span>
+                </div>
+            </div>
+            <div class="gp rounded-xl p-5">
+                <div class="text-sm font-medium mb-2 flex items-center gap-2"><span class="tag tg">Rule 3</span> Returns a Promise</div>
+                <div class="cb text-xs" style="padding:12px 14px">
+                    <span class="kw">async function</span> <span class="fn">foo</span>() { <span class="kw">return</span> <span class="num">42</span>; }<br>
+                    <span class="fn">foo</span>().<span class="fn">then</span>(v => console.<span class="fn">log</span>(v)); <span class="cm">// 42</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 13 -->
+<div class="slide" data-s="13">
+    <div class="sw">13</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">What Await Actually Does</h2>
+        <div class="a2 term mb-6">
+            <div class="term-bar"><div class="term-dot" style="background:#EF4444"></div><div class="term-dot" style="background:#EAB308"></div><div class="term-dot" style="background:#22C55E"></div><span class="text-[10px] text-neutral-600 ml-2">execution timeline</span></div>
+            <div class="term-body">
+                <div><span class="text-blue-400">→ Line 1:</span> <span class="text-neutral-300">fetch() starts (network request sent)</span></div>
+                <div><span class="text-yellow-400">⏸ Line 1:</span> <span class="text-neutral-300">await pauses this function</span></div>
+                <div><span class="text-neutral-600">  ... other code can run ...</span></div>
+                <div><span class="text-neutral-600">  ... UI stays responsive ...</span></div>
+                <div><span class="text-green-400">▶ Line 1:</span> <span class="text-neutral-300">response arrives, function resumes</span></div>
+                <div><span class="text-blue-400">→ Line 2:</span> <span class="text-neutral-300">response.json() starts</span></div>
+                <div><span class="text-yellow-400">⏸ Line 2:</span> <span class="text-neutral-300">await pauses again</span></div>
+                <div><span class="text-green-400">▶ Line 2:</span> <span class="text-neutral-300">parsed data available</span></div>
+                <div><span class="text-blue-400">→ Line 3:</span> <span class="text-neutral-300">console.log(users) ✓</span></div>
+            </div>
+        </div>
+        <div class="a3 gp rounded-xl p-4 flex items-center gap-3">
+            <i data-lucide="pause" class="w-4 h-4 text-yellow-400 flex-shrink-0"></i>
+            <span class="text-xs text-neutral-400"><span class="text-white font-medium">await ≠ block</span>. The whole page doesn't freeze. Only <span class="text-white">that function</span> pauses.</span>
+        </div>
+    </div>
+</div>
+
+<!-- 14 -->
+<div class="slide" data-s="14">
+    <div class="sw">14</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">.then() vs async/await</h2>
+        <div class="a2 grid md:grid-cols-2 gap-6">
+            <div class="gp rounded-xl p-5">
+                <div class="text-xs text-red-400 font-medium mb-3">.then() Chaining</div>
+                <div class="cb text-xs" style="padding:14px 16px">
+                    <span class="fn">fetch</span>(url)<br>
+                    &nbsp;.<span class="fn">then</span>(r => r.<span class="fn">json</span>())<br>
+                    &nbsp;.<span class="fn">then</span>(data => {<br>
+                    &nbsp;&nbsp;console.<span class="fn">log</span>(data);<br>
+                    &nbsp;})<br>
+                    &nbsp;.<span class="fn">catch</span>(err => {<br>
+                    &nbsp;&nbsp;console.<span class="fn">error</span>(err);<br>
+                    &nbsp;});
+                </div>
+            </div>
+            <div class="gp rounded-xl p-5" style="border-color:rgba(59,130,246,.15)">
+                <div class="text-xs text-blue-400 font-medium mb-3">async/await ✨</div>
+                <div class="cb text-xs" style="padding:14px 16px">
+                    <span class="kw">async function</span> <span class="fn">load</span>() {<br>
+                    &nbsp;&nbsp;<span class="kw">try</span> {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> r = <span class="kw">await</span> <span class="fn">fetch</span>(url);<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> d = <span class="kw">await</span> r.<span class="fn">json</span>();<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(d);<br>
+                    &nbsp;&nbsp;} <span class="kw">catch</span>(err) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">error</span>(err);<br>
+                    &nbsp;&nbsp;}<br>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="a3 mt-4 text-center text-sm text-neutral-500">Same result. <span class="text-white">async/await is just cleaner syntax.</span></div>
+    </div>
+</div>
+
+<!-- 15 -->
+<div class="slide" data-s="15">
+    <div class="sw">15</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Error Handling: try/catch</h2>
+        <div class="a2 cb mb-6">
+            <span class="kw">async function</span> <span class="fn">getUsers</span>() {<br>
+            &nbsp;&nbsp;<span class="kw">try</span> {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/users'</span>);<br><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// Check for HTTP errors!</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (!response.<span class="fn">ok</span>) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">throw new</span> <span class="fn">Error</span>(<span class="str">`HTTP ${response.status}`</span>);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> users = <span class="kw">await</span> response.<span class="fn">json</span>();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> users;<br><br>
+            &nbsp;&nbsp;} <span class="kw">catch</span> (error) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">error</span>(<span class="str">'Failed:'</span>, error.message);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> []; <span class="cm">// graceful fallback</span><br>
+            &nbsp;&nbsp;}<br>
+            }
+        </div>
+        <div class="a3 gp rounded-xl p-4 flex items-center gap-3">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400 flex-shrink-0"></i>
+            <span class="text-xs text-neutral-400"><span class="text-red-400 font-medium">fetch doesn't throw on 404/500!</span> It only throws on network failure. Always check <span class="text-white font-medium">response.ok</span>.</span>
+        </div>
+    </div>
+</div>
+
+<!-- 16 -->
+<div class="slide" data-s="16">
+    <div class="sw">16</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">HTTP Methods</h2>
+        <div class="a2 grid grid-cols-2 gap-4 mb-6">
+            <div class="gp rounded-xl p-5">
+                <div class="method-badge bg-blue-500/10 text-blue-400 border border-blue-500/20 inline-block mb-3">GET</div>
+                <div class="text-sm font-medium mb-1">Read data</div>
+                <div class="text-xs text-neutral-500">Fetch users, posts, etc. No body.</div>
+            </div>
+            <div class="gp rounded-xl p-5">
+                <div class="method-badge bg-green-500/10 text-green-400 border border-green-500/20 inline-block mb-3">POST</div>
+                <div class="text-sm font-medium mb-1">Create data</div>
+                <div class="text-xs text-neutral-500">Submit a form, create a record. Has body.</div>
+            </div>
+            <div class="gp rounded-xl p-5">
+                <div class="method-badge bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 inline-block mb-3">PUT</div>
+                <div class="text-sm font-medium mb-1">Update data</div>
+                <div class="text-xs text-neutral-500">Edit a user, update settings. Has body.</div>
+            </div>
+            <div class="gp rounded-xl p-5">
+                <div class="method-badge bg-red-500/10 text-red-400 border border-red-500/20 inline-block mb-3">DELETE</div>
+                <div class="text-sm font-medium mb-1">Delete data</div>
+                <div class="text-xs text-neutral-500">Remove a post, delete an account.</div>
+            </div>
+        </div>
+        <div class="a3 text-center text-xs text-neutral-500">CRUD = <span class="text-blue-400">C</span>reate <span class="text-green-400">R</span>ead <span class="text-yellow-400">U</span>pdate <span class="text-red-400">D</span>elete = POST, GET, PUT, DELETE</div>
+    </div>
+</div>
+
+<!-- 17 -->
+<div class="slide" data-s="17">
+    <div class="sw">17</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">GET Request — Complete</h2>
+        <div class="a2 cb mb-6">
+            <span class="kw">async function</span> <span class="fn">fetchUsers</span>() {<br>
+            &nbsp;&nbsp;<span class="kw">try</span> {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'https://jsonplaceholder.typicode.com/users'</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;);<br><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (!res.<span class="fn">ok</span>) <span class="kw">throw new</span> <span class="fn">Error</span>(res.<span class="fn">status</span>);<br><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> users = <span class="kw">await</span> res.<span class="fn">json</span>();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">log</span>(users); <span class="cm">// Array of 10 users</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> users;<br><br>
+            &nbsp;&nbsp;} <span class="kw">catch</span> (err) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">error</span>(<span class="str">'Fetch failed:'</span>, err);<br>
+            &nbsp;&nbsp;}<br>
+            }<br><br>
+            <span class="fn">fetchUsers</span>();
+        </div>
+    </div>
+</div>
+
+<!-- 18 -->
+<div class="slide" data-s="18">
+    <div class="sw">18</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">JSONPlaceholder — Our Sandbox</h2>
+        <div class="a2 gp rounded-xl p-6 mb-6">
+            <div class="text-center mb-4">
+                <div class="text-lg font-medium mb-1">jsonplaceholder.typicode.com</div>
+                <div class="text-xs text-neutral-500">Free fake API for testing & prototyping</div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div class="gp rounded-lg p-3 text-center"><div class="font-mono text-xs text-blue-400">/users</div><div class="text-[10px] text-neutral-600 mt-1">100 users</div></div>
+                <div class="gp rounded-lg p-3 text-center"><div class="font-mono text-xs text-green-400">/posts</div><div class="text-[10px] text-neutral-600 mt-1">100 posts</div></div>
+                <div class="gp rounded-lg p-3 text-center"><div class="font-mono text-xs text-yellow-400">/comments</div><div class="text-[10px] text-neutral-600 mt-1">500 comments</div></div>
+                <div class="gp rounded-lg p-3 text-center"><div class="font-mono text-xs text-purple-400">/todos</div><div class="text-[10px] text-neutral-600 mt-1">200 todos</div></div>
+                <div class="gp rounded-lg p-3 text-center"><div class="font-mono text-xs text-red-400">/photos</div><div class="text-[10px] text-neutral-600 mt-1">5000 photos</div></div>
+                <div class="gp rounded-lg p-3 text-center"><div class="font-mono text-xs text-orange-400">/albums</div><div class="text-[10px] text-neutral-600 mt-1">100 albums</div></div>
+            </div>
+        </div>
+        <div class="a3 cb text-xs" style="padding:14px 16px">
+            <span class="cm">// All support GET, POST, PUT, DELETE</span><br>
+            <span class="cm">// /users/1  → single user</span><br>
+            <span class="cm">// /users/1/posts → nested resource</span>
+        </div>
+    </div>
+</div>
+
+<!-- 19 -->
+<div class="slide" data-s="19">
+    <div class="sw">19</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Rendering API Data to DOM</h2>
+        <div class="a2 cb mb-6" style="font-size:12px;line-height:1.6">
+            <span class="kw">async function</span> <span class="fn">displayUsers</span>() {<br>
+            &nbsp;&nbsp;<span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/users'</span>);<br>
+            &nbsp;&nbsp;<span class="kw">const</span> users = <span class="kw">await</span> res.<span class="fn">json</span>();<br><br>
+            &nbsp;&nbsp;<span class="kw">const</span> container = document.<span class="fn">querySelector</span>(<span class="str">'#user-list'</span>);<br><br>
+            &nbsp;&nbsp;users.<span class="fn">forEach</span>(user => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> div = document.<span class="fn">createElement</span>(<span class="str">'div'</span>);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;div.innerHTML = <span class="str">`</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">&lt;h3&gt;${user.name}&lt;/h3&gt;</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">&lt;p&gt;${user.email}&lt;/p&gt;</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="str">`</span>;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;container.<span class="fn">appendChild</span>(div);<br>
+            &nbsp;&nbsp;});<br>
+            }
+        </div>
+        <div class="a3 flex flex-wrap gap-2">
+            <span class="tag tbl">fetch()</span>
+            <span class="text-neutral-600">→</span>
+            <span class="tag tp">.json()</span>
+            <span class="text-neutral-600">→</span>
+            <span class="tag tg">forEach()</span>
+            <span class="text-neutral-600">→</span>
+            <span class="tag ty">createElement()</span>
+            <span class="text-neutral-600">→</span>
+            <span class="tag to">appendChild()</span>
+        </div>
+    </div>
+</div>
+
+<!-- 20 -->
+<div class="slide" data-s="20">
+    <div class="sw">20</div>
+    <div class="max-w-xl mx-auto relative z-10">
+        <div class="a1 tag ty mb-6"><i data-lucide="play" class="w-3 h-3"></i> Live Demo</div>
+        <h2 class="a1 text-2xl font-medium tracking-tight mb-6">Fetch & Display Users</h2>
+        <div class="a2">
+            <button id="fetchUsersBtn" class="db w-full mb-4 flex items-center justify-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i> Fetch Users from API
+            </button>
+            <div id="usersContainer" class="space-y-2 max-h-[280px] overflow-y-auto pr-1" style="scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent"></div>
+            <div id="usersLoading" class="text-center py-8 hidden">
+                <div class="spinner mx-auto mb-2"></div>
+                <div class="text-xs text-neutral-500">Fetching users...</div>
+            </div>
+            <div id="usersError" class="text-center py-6 hidden">
+                <div class="text-xs text-red-400"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 21 -->
+<div class="slide" data-s="21">
+    <div class="sw">21</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">POST Request — Sending Data</h2>
+        <div class="a2 cb mb-6">
+            <span class="kw">async function</span> <span class="fn">createPost</span>() {<br>
+            &nbsp;&nbsp;<span class="kw">const</span> newPost = {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">title</span>: <span class="str">'My First Post'</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">body</span>: <span class="str">'This is the content...'</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">userId</span>: <span class="num">1</span><br>
+            &nbsp;&nbsp;};<br><br>
+            &nbsp;&nbsp;<span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'https://jsonplaceholder.typicode.com/posts'</span>, {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">method</span>: <span class="str">'POST'</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">headers</span>: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">body</span>: <span class="fn">JSON.stringify</span>(newPost)<br>
+            &nbsp;&nbsp;});<br><br>
+            &nbsp;&nbsp;<span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();<br>
+            &nbsp;&nbsp;console.<span class="fn">log</span>(data); <span class="cm">// { id: 101, title: "..." }</span><br>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- 22 -->
+<div class="slide" data-s="22">
+    <div class="sw">22</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">POST Options Breakdown</h2>
+        <div class="a2 space-y-4">
+            <div class="gp rounded-xl p-5">
+                <div class="flex items-center gap-2 mb-2"><span class="tag tr">method</span></div>
+                <div class="text-sm text-neutral-300">Set to <span class="font-mono text-white">'POST'</span> to send data. Default is <span class="font-mono text-neutral-500">'GET'</span>.</div>
+            </div>
+            <div class="gp rounded-xl p-5">
+                <div class="flex items-center gap-2 mb-2"><span class="tag tp">headers</span></div>
+                <div class="text-sm text-neutral-300 mb-2">Tells the server what format the data is in:</div>
+                <div class="cb text-xs" style="padding:10px 14px">
+                    { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> }<br>
+                    <span class="cm">// "Hey server, this body is JSON"</span>
+                </div>
+            </div>
+            <div class="gp rounded-xl p-5">
+                <div class="flex items-center gap-2 mb-2"><span class="tag tbl">body</span></div>
+                <div class="text-sm text-neutral-300 mb-2">The actual data. Must be a <span class="text-white font-medium">string</span>:</div>
+                <div class="cb text-xs" style="padding:10px 14px">
+                    <span class="fn">JSON.stringify</span>({ name: <span class="str">'John'</span> })<br>
+                    <span class="cm">// → '{"name":"John"}'</span><br><br>
+                    <span class="tr">// ❌ WRONG: body: { name: 'John' }</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 23 -->
+<div class="slide" data-s="23">
+    <div class="sw">23</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Common Headers</h2>
+        <div class="a2 gp rounded-xl overflow-hidden rt mb-6">
+            <table>
+                <thead><tr><th>Header</th><th>Value</th><th>When</th></tr></thead>
+                <tbody>
+                    <tr><td class="font-mono text-xs text-blue-400">Content-Type</td><td class="font-mono text-xs">application/json</td><td class="text-xs">Sending JSON body</td></tr>
+                    <tr><td class="font-mono text-xs text-purple-400">Authorization</td><td class="font-mono text-xs">Bearer TOKEN</td><td class="text-xs">Auth required</td></tr>
+                    <tr><td class="font-mono text-xs text-green-400">Accept</td><td class="font-mono text-xs">application/json</td><td class="text-xs">Expecting JSON back</td></tr>
+                    <tr><td class="font-mono text-xs text-yellow-400">Cache-Control</td><td class="font-mono text-xs">no-cache</td><td class="text-xs">Skip browser cache</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="a3 cb text-xs" style="padding:14px 16px">
+            <span class="cm">// Example with auth</span><br>
+            <span class="fn">fetch</span>(<span class="str">'/api/private'</span>, {<br>
+            &nbsp;&nbsp;<span class="attr">headers</span>: {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'Authorization'</span>: <span class="str">`Bearer ${token}`</span><br>
+            &nbsp;&nbsp;}<br>
+            })
+        </div>
+    </div>
+</div>
+
+<!-- 24 -->
+<div class="slide" data-s="24">
+    <div class="sw">24</div>
+    <div class="max-w-xl mx-auto relative z-10">
+        <div class="a1 tag ty mb-6"><i data-lucide="play" class="w-3 h-3"></i> Live Demo</div>
+        <h2 class="a1 text-2xl font-medium tracking-tight mb-6">POST: Create a Post</h2>
+        <div class="a2 gp rounded-xl p-6 space-y-3">
+            <div>
+                <label class="text-xs text-neutral-400 block mb-1">Title</label>
+                <input type="text" id="postTitle" class="di" placeholder="Post title..." autocomplete="off">
+            </div>
+            <div>
+                <label class="text-xs text-neutral-400 block mb-1">Body</label>
+                <input type="text" id="postBody" class="di" placeholder="Post content..." autocomplete="off">
+            </div>
+            <button id="createPostBtn" class="db w-full flex items-center justify-center gap-2">
+                <i data-lucide="send" class="w-4 h-4"></i> Create Post
+            </button>
+            <div id="postResult" class="hidden gp rounded-lg p-4 text-xs font-mono text-neutral-300" style="word-break:break-all"></div>
+            <div id="postLoading" class="text-center py-3 hidden"><div class="spinner mx-auto"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- 25 -->
+<div class="slide" data-s="25">
+    <div class="sw">25</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Loading States</h2>
+        <div class="a2 grid md:grid-cols-2 gap-6">
+            <div>
+                <div class="text-xs text-neutral-500 mb-3">Show while waiting:</div>
+                <div class="gp rounded-xl p-5 text-center">
+                    <div class="spinner mx-auto mb-3" style="width:24px;height:24px;border-width:3px"></div>
+                    <div class="text-sm text-neutral-400">Loading users...</div>
+                </div>
+            </div>
+            <div>
+                <div class="text-xs text-neutral-500 mb-3">Implementation pattern:</div>
+                <div class="cb text-xs" style="padding:14px 16px">
+                    <span class="kw">const</span> loader = <span class="fn">$</span>(<span class="str">'#loader'</span>);<br>
+                    <span class="kw">const</span> list = <span class="fn">$</span>(<span class="str">'#list'</span>);<br><br>
+                    loader.style.display = <span class="str">'block'</span>;<br>
+                    list.style.display = <span class="str">'none'</span>;<br><br>
+                    <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(...);<br><br>
+                    loader.style.display = <span class="str">'none'</span>;<br>
+                    list.style.display = <span class="str">'block'</span>;<br>
+                    <span class="cm">// render data...</span>
+                </div>
+            </div>
+        </div>
+        <div class="a3 mt-4 gp rounded-xl p-4 flex items-center gap-3">
+            <i data-lucide="info" class="w-4 h-4 text-blue-400 flex-shrink-0"></i>
+            <span class="text-xs text-neutral-400">Always show loading. <span class="text-white font-medium">Blank screen = broken app</span> in the user's mind.</span>
+        </div>
+    </div>
+</div>
+
+<!-- 26 -->
+<div class="slide" data-s="26">
+    <div class="sw">26</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Error States</h2>
+        <div class="a2 space-y-4">
+            <div class="gp rounded-xl p-5 border-l-2 border-red-500/40">
+                <div class="text-sm font-medium text-red-400 mb-1">Network Error</div>
+                <div class="text-xs text-neutral-500">No internet, server down, CORS blocked. fetch() throws.</div>
+                <div class="cb text-xs mt-2" style="padding:8px 12px"><span class="kw">catch</span>(err) { <span class="cm">// "Failed to fetch"</span> }</div>
+            </div>
+            <div class="gp rounded-xl p-5 border-l-2 border-yellow-500/40">
+                <div class="text-sm font-medium text-yellow-400 mb-1">HTTP Error (4xx, 5xx)</div>
+                <div class="text-xs text-neutral-500">404 Not Found, 401 Unauthorized, 500 Server Error. fetch() does NOT throw!</div>
+                <div class="cb text-xs mt-2" style="padding:8px 12px"><span class="kw">if</span> (!res.<span class="fn">ok</span>) <span class="kw">throw new</span> <span class="fn">Error</span>(res.<span class="fn">status</span>);</div>
+            </div>
+            <div class="gp rounded-xl p-5 border-l-2 border-purple-500/40">
+                <div class="text-sm font-medium text-purple-400 mb-1">Parse Error</div>
+                <div class="text-xs text-neutral-500">Server returns invalid JSON. .json() throws.</div>
+                <div class="cb text-xs mt-2" style="padding:8px 12px"><span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>(); <span class="cm">// throws</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 27 -->
+<div class="slide" data-s="27">
+    <div class="sw">27</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Status Codes Cheat Sheet</h2>
+        <div class="a2 gp rounded-xl overflow-hidden rt mb-6">
+            <table>
+                <thead><tr><th>Code</th><th>Name</th><th>Meaning</th><th>Action</th></tr></thead>
+                <tbody>
+                    <tr><td class="font-mono text-green-400">200</td><td>OK</td><td>Success</td><td class="text-xs text-green-400">Use the data</td></tr>
+                    <tr><td class="font-mono text-green-400">201</td><td>Created</td><td>POST success</td><td class="text-xs text-green-400">Show success msg</td></tr>
+                    <tr><td class="font-mono text-yellow-400">400</td><td>Bad Request</td><td>Invalid input</td><td class="text-xs text-yellow-400">Show field errors</td></tr>
+                    <tr><td class="font-mono text-yellow-400">401</td><td>Unauthorized</td><td>Not logged in</td><td class="text-xs text-yellow-400">Redirect to login</td></tr>
+                    <tr><td class="font-mono text-yellow-400">404</td><td>Not Found</td><td>Wrong URL</td><td class="text-xs text-yellow-400">Show "not found"</td></tr>
+                    <tr><td class="font-mono text-red-400">500</td><td>Server Error</td><td>Server crashed</td><td class="text-xs text-red-400">Show "try later"</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="a3 text-center text-xs text-neutral-500"><span class="text-green-400">2xx</span> = good · <span class="text-yellow-400">4xx</span> = your fault · <span class="text-red-400">5xx</span> = their fault</div>
+    </div>
+</div>
+
+<!-- 28 -->
+<div class="slide" data-s="28">
+    <div class="sw">28</div>
+    <div class="max-w-3xl mx-auto relative z-10">
+        <h2 class="a1 text-3xl md:text-4xl font-medium tracking-tight mb-8">Complete Async Pattern</h2>
+        <div class="a2 cb" style="font-size:11px;line-height:1.6">
+            <span class="kw">async function</span> <span class="fn">loadDashboard</span>() {<br>
+            &nbsp;&nbsp;<span class="kw">const</span> list = document.<span class="fn">querySelector</span>(<span class="str">'#list'</span>);<br>
+            &nbsp;&nbsp;<span class="kw">const</span> loader = document.<span class="fn">querySelector</span>(<span class="str">'#loader'</span>);<br><br>
+            &nbsp;&nbsp;<span class="cm">// 1. Show loading</span><br>
+            &nbsp;&nbsp;list.innerHTML = <span class="str">''</span>;<br>
+            &nbsp;&nbsp;loader.classList.<span class="fn">remove</span>(<span class="str">'hidden'</span>);<br><br>
+            &nbsp;&nbsp;<span class="kw">try</span> {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 2. Fetch</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'https://jsonplaceholder.typicode.com/users'</span>);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (!res.<span class="fn">ok</span>) <span class="kw">throw new</span> <span class="fn">Error</span>(<span class="str">`HTTP ${res.status}`</span>);<br><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 3. Parse</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> users = <span class="kw">await</span> res.<span class="fn">json</span>();<br><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 4. Render</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;users.<span class="fn">forEach</span>(u => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list.innerHTML += <span class="str">`&lt;div&gt;${u.name} - ${u.email}&lt;/div&gt;`</span>;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br><br>
+            &nbsp;&nbsp;} <span class="kw">catch</span>(err) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 5. Error state</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;list.innerHTML = <span class="str">`&lt;p style="color:red"&gt;${err.message}&lt;/p&gt;`</span>;<br>
+            &nbsp;&nbsp;} <span class="kw">finally</span> {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 6. Hide loading (always!)</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;loader.classList.<span class="fn">add</span>(<span class="str">'hidden'</span>);<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- 29 -->
+<div class="slide" data-s="29">
+    <div class="sw">29</div>
+    <div class="max-w-xl mx-auto relative z-10">
+        <div class="a1 tag ty mb-6"><i data-lucide="play" class="w-3 h-3"></i> Live Demo</div>
+        <h2 class="a1 text-2xl font-medium tracking-tight mb-6">Mini Dashboard</h2>
+        <div class="a2 gp rounded-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs text-neutral-500">Data from jsonplaceholder.typicode.com</span>
+                <button id="dashReload" class="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Reload</button>
+            </div>
+            <div id="dashStats" class="grid grid-cols-3 gap-2 mb-4">
+                <div class="gp rounded-lg p-3 text-center"><div class="text-lg font-semibold text-blue-400" id="dashUserCount">-</div><div class="text-[10px] text-neutral-500">Users</div></div>
+                <div class="gp rounded-lg p-3 text-center"><div class="text-lg font-semibold text-green-400" id="dashPostCount">-</div><div class="text-[10px] text-neutral-500">Posts</div></div>
+                <div class="gp rounded-lg p-3 text-center"><div class="text-lg font-semibold text-purple-400" id="dashTodoCount">-</div><div class="text-[10px] text-neutral-500">Todos</div></div>
+            </div>
+            <div id="dashList" class="space-y-1.5 max-h-[160px] overflow-y-auto pr-1" style="scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent"></div>
+            <div id="dashLoading" class="text-center py-6 hidden"><div class="spinner mx-auto mb-2"></div><div class="text-xs text-neutral-500">Loading...</div></div>
+            <div id="dashError" class="text-center py-4 hidden"><div class="text-xs text-red-400"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- 30 -->
+<div class="slide" data-s="30">
+    <div class="glow" style="bottom:-200px;right:-200px;background:rgba(59,130,246,.06)"></div>
+    <div class="sw">30</div>
+    <div class="max-w-3xl mx-auto text-center relative z-10">
+        <div class="a1 tag tg mb-8"><i data-lucide="git-commit" class="w-3 h-3"></i> Day 11 Complete</div>
+        <h2 class="a1 text-4xl md:text-6xl font-medium tracking-tight leading-[.9] mb-6">Commit:<br><span class="text-neutral-500">"API Integration"</span></h2>
+        <div class="a2 term max-w-md mx-auto mb-10">
+            <div class="term-bar"><div class="term-dot" style="background:#EF4444"></div><div class="term-dot" style="background:#EAB308"></div><div class="term-dot" style="background:#22C55E"></div><span class="text-[10px] text-neutral-600 ml-2">terminal</span></div>
+            <div class="term-body text-left">
+                <div><span class="text-neutral-500">$ </span><span class="text-neutral-300">git add .</span></div>
+                <div><span class="text-neutral-500">$ </span><span class="text-neutral-300">git commit -m "API Integration"</span></div>
+                <div class="text-green-400">[main b7e3f2a] API Integration</div>
+                <div class="text-neutral-600"> 4 files changed, 186 insertions(+)</div>
+                <div><span class="text-neutral-500">$ </span><span class="text-neutral-300">git push origin main</span></div>
+                <div class="text-green-400">✓ Pushed to origin/main</div>
+            </div>
+        </div>
+        <div class="a3 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-lg mx-auto mb-10">
+            <div class="gp rounded-lg p-3 text-center"><div class="text-lg font-semibold text-white">fetch()</div><div class="text-[10px] text-neutral-500">API Calls</div></div>
+            <div class="gp rounded-lg p-3 text-center"><div class="text-lg font-semibold text-white">async</div><div class="text-[10px] text-neutral-500">Functions</div></div>
+            <div class="gp rounded-lg p-3 text-center"><div class="text-lg font-semibold text-white">3</div><div class="text-[10px] text-neutral-500">Live Demos</div></div>
+            <div class="gp rounded-lg p-3 text-center"><div class="text-lg font-semibold text-blue-400">1</div><div class="text-[10px] text-neutral-500">Commit</div></div>
+        </div>
+        <div class="a4 text-sm text-neutral-500">Next up: <span class="text-white font-medium">Day 12 — AI Chat UI Planning</span> (HTML/CSS Chat Layout)</div>
+    </div>
+</div>
+
+</div>
+
+<!-- Bottom Nav -->
+<div class="sn">
+    <div class="max-w-3xl mx-auto flex items-center justify-between">
+        <button id="pb" class="flex items-center gap-2 px-5 py-2.5 rounded-full border border-neutral-700 text-xs font-medium hover:border-neutral-500 hover:bg-white/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed" disabled><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Previous</button>
+        <div class="flex items-center gap-1.5" id="dn"></div>
+        <button id="nb" class="flex items-center gap-2 px-5 py-2.5 bg-white text-black text-xs font-medium rounded-full hover:bg-neutral-200 transition-all">Next <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
+    </div>
+</div>
+
+<div id="toast" class="fixed bottom-20 right-6 z-[200] gs rounded-xl p-4 flex items-center gap-3 translate-y-10 opacity-0 transition-all duration-500 pointer-events-none" style="max-width:300px">
+    <div class="w-7 h-7 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center flex-shrink-0"><i data-lucide="check" class="w-3.5 h-3.5 text-green-400"></i></div>
+    <div><div class="text-xs font-medium text-white" id="tt"></div><div class="text-[10px] text-neutral-500" id="tm"></div></div>
+</div>
+
+<script>
+lucide.createIcons();
+
+const canvas=document.getElementById('pc'),ctx=canvas.getContext('2d');let pts=[];
+function rc(){canvas.width=innerWidth;canvas.height=innerHeight}rc();addEventListener('resize',rc);
+class P{constructor(){this.x=Math.random()*canvas.width;this.y=Math.random()*canvas.height;this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3;this.s=Math.random()*1.2+.4}update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>canvas.width)this.vx*=-1;if(this.y<0||this.y>canvas.height)this.vy*=-1}draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.s,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.2)';ctx.fill()}}
+for(let i=0;i<35;i++)pts.push(new P);
+function ap(){ctx.clearRect(0,0,canvas.width,canvas.height);pts.forEach(p=>{p.update();p.draw()});for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const d=Math.hypot(pts[i].x-pts[j].x,pts[i].y-pts[j].y);if(d<80){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(255,255,255,${.03*(1-d/80)})`;ctx.lineWidth=.5;ctx.stroke()}}requestAnimationFrame(ap)}ap();
+
+const slides=document.querySelectorAll('.slide'),ts=slides.length;let cs=1,ia=false;
+const pb=document.getElementById('pb'),nb=document.getElementById('nb'),pf=document.getElementById('pf'),sc=document.getElementById('sc'),dn=document.getElementById('dn');
+for(let i=1;i<=ts;i++){const d=document.createElement('button');d.className='w-1.5 h-1.5 rounded-full transition-all duration-300 '+(i===1?'bg-white w-4':'bg-neutral-600 hover:bg-neutral-400');d.dataset.s=i;d.addEventListener('click',()=>go(i));dn.appendChild(d)}
+function uu(){pf.style.width=(cs/ts*100)+'%';sc.textContent=String(cs).padStart(2,'0')+' / '+ts;pb.disabled=cs===1;nb.innerHTML=cs===ts?'<i data-lucide="check" class="w-3.5 h-3.5"></i> Done':'Next <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';lucide.createIcons();dn.querySelectorAll('button').forEach((d,i)=>{d.className=(i+1===cs?'w-4 h-1.5 rounded-full bg-white':'w-1.5 h-1.5 rounded-full bg-neutral-600 hover:bg-neutral-400')+' transition-all duration-300'})}
+function go(n){if(ia||n===cs||n<1||n>ts)return;ia=true;const dir=n>cs?1:-1,ce=document.querySelector(`.slide[data-s="${cs}"]`),ne=document.querySelector(`.slide[data-s="${n}"]`);ce.classList.remove('active');ce.style.transform=dir>0?'translateX(-60px)':'translateX(60px)';ce.style.opacity='0';ne.style.transform=dir>0?'translateX(60px)':'translateX(-60px)';ne.style.opacity='0';requestAnimationFrame(()=>{ne.classList.add('active');ne.style.transform='';ne.style.opacity=''});cs=n;uu();setTimeout(()=>{ce.style.transform='';ce.style.opacity='';ia=false},600)}
+pb.addEventListener('click',()=>go(cs-1));
+nb.addEventListener('click',()=>{if(cs===ts){showToast('🎉 Day 11 Complete!','API Integration committed.')}else go(cs+1)});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();if(cs<ts)go(cs+1)}else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();go(cs-1)}});
+let tx=0;document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});document.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>50){if(d>0&&cs<ts)go(cs+1);else if(d<0&&cs>1)go(cs-1)}},{passive:true});
+
+function showToast(t,m){const to=document.getElementById('toast');document.getElementById('tt').textContent=t;document.getElementById('tm').textContent=m;to.classList.remove('translate-y-10','opacity-0','pointer-events-none');to.classList.add('translate-y-0','opacity-100');setTimeout(()=>{to.classList.add('translate-y-10','opacity-0','pointer-events-none');to.classList.remove('translate-y-0','opacity-100')},3000)}
+
+const API='https://jsonplaceholder.typicode.com';
+
+// Demo 20: Fetch Users
+document.getElementById('fetchUsersBtn').addEventListener('click',async function(){
+    const btn=this,cont=document.getElementById('usersContainer'),ld=document.getElementById('usersLoading'),er=document.getElementById('usersError');
+    btn.disabled=true;cont.innerHTML='';ld.classList.remove('hidden');er.classList.add('hidden');
+    try{
+        const res=await fetch(`${API}/users`);if(!res.ok)throw new Error(`HTTP ${res.status}`);
+        const users=await res.json();
+        users.slice(0,8).forEach(u=>{
+            const d=document.createElement('div');d.className='user-card flex items-center gap-3';
+            d.innerHTML=`<div class="w-9 h-9 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-xs font-semibold text-blue-400 flex-shrink-0">${u.name.charAt(0)}</div><div class="min-w-0"><div class="text-sm font-medium truncate">${u.name}</div><div class="text-[11px] text-neutral-500 truncate">${u.email}</div></div>`;
+            cont.appendChild(d);
+        });
+    }catch(err){er.querySelector('div').textContent=err.message;er.classList.remove('hidden')}
+    finally{ld.classList.add('hidden');btn.disabled=false}
+});
+
+// Demo 24: Create Post
+document.getElementById('createPostBtn').addEventListener('click',async function(){
+    const btn=this,title=document.getElementById('postTitle').value.trim(),body=document.getElementById('postBody').value.trim();
+    const res=document.getElementById('postResult'),ld=document.getElementById('postLoading');
+    if(!title||!body){showToast('Missing fields','Enter both title and body.');return}
+    btn.disabled=true;res.classList.add('hidden');ld.classList.remove('hidden');
+    try{
+        const r=await fetch(`${API}/posts`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,body,userId:1})});
+        if(!r.ok)throw new Error(`HTTP ${r.status}`);
+        const data=await r.json();
+        res.innerHTML=`<span class="text-green-400">✓ Created!</span>\n${JSON.stringify(data,null,2)}`;res.classList.remove('hidden');
+        showToast('Post created!',`ID: ${data.id}`);
+    }catch(err){res.innerHTML=`<span class="text-red-400">Error:</span> ${err.message}`;res.classList.remove('hidden')}
+    finally{ld.classList.add('hidden');btn.disabled=false}
+});
+
+// Demo 29: Mini Dashboard
+async function loadDash(){
+    const list=document.getElementById('dashList'),ld=document.getElementById('dashLoading'),er=document.getElementById('dashError');
+    list.innerHTML='';ld.classList.remove('hidden');er.classList.add('hidden');
+    document.getElementById('dashUserCount').textContent='-';document.getElementById('dashPostCount').textContent='-';document.getElementById('dashTodoCount').textContent='-';
+    try{
+        const[uR,pR,tR]=await Promise.all([fetch(`${API}/users`),fetch(`${API}/posts`),fetch(`${API}/todos`)]);
+        if(!uR.ok||!pR.ok||!tR.ok)throw new Error('API error');
+        const[users,posts,todos]=await Promise.all([uR.json(),pR.json(),tR.json()]);
+        document.getElementById('dashUserCount').textContent=users.length;
+        document.getElementById('dashPostCount').textContent=posts.length;
+        document.getElementById('dashTodoCount').textContent=todos.filter(t=>!t.completed).length;
+        users.slice(0,5).forEach(u=>{const d=document.createElement('div');d.className='gp rounded-lg p-2.5 flex items-center gap-2';d.innerHTML=`<div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-[10px] font-semibold text-blue-400">${u.name.charAt(0)}</div><div class="min-w-0"><div class="text-xs font-medium truncate">${u.name}</div><div class="text-[10px] text-neutral-600 truncate">${u.company.name}</div></div>`;list.appendChild(d)});
+    }catch(err){er.querySelector('div').textContent=err.message;er.classList.remove('hidden')}
+    finally{ld.classList.add('hidden')}
+}
+document.getElementById('dashReload').addEventListener('click',loadDash);
+
+// Auto-load dashboard when slide 29 is reached
+const origGo=go;
+go=function(n){
+    origGo(n);
+    if(n===29)setTimeout(loadDash,400);
+    <p> ok </p>
+};
+
+uu();
+</script>
+</body>
+</html>
